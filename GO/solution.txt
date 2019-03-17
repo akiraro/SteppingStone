@@ -1,0 +1,8 @@
+Solution created by Haziq Hafizi (8346453)
+Result for Stepping Stone Algorithm :
+COSTS A B C D SUPPLY 
+Source1 134 - - - 134 
+Source2 29 - - 174 203 
+Source3 - - 175 1 176 
+Source4 12 175 - 0 187 
+DEMAND 175 175 175 175  
