@@ -1,7 +1,0 @@
-Solution created by Haziq Hafizi (8346453)
-Result for Stepping Stone Algorithm :
-COSTS A B C SUPPLY 
-Source1 - 0 150 150 
-Source2 25 - 150 175 
-Source3 175 100 - 275 
-DEMAND 200 100 300  

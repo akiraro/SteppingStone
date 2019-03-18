@@ -71,11 +71,11 @@ getNotMember(_,_,_):-
 
 
 % Add New Data
-% addData
+% addData((Xcoordinate,Ycoordinate))
 addData((X,Y)):- asserta(database((X,Y))).
 database((0,0)).
 
-% Find Marginal Cost
+% Find Marginal Cost For Each Closed Loops Found
 % findCost(ListPath,ListCost,CurrentLowest,LengthX,Dummy,ResultCost)
 findCost([],_,_,_,Dummy,Dummy):-!.
 findCost([A|LP],LC,CL,LengthX,Dummy,RC):-
@@ -111,7 +111,7 @@ calculateNeg([(Ax,Ay)|L],LC,LengthX,Acc,Result):-
     R1 is Acc - Res,
     calculatePos(L,LC,LengthX,R1,Result).
 
-% Modify Data
+% Modify The Existing List 
 % modData(List,LengthX)
 modData([(Ax,Ay)|L],SupplyList,LengthX,R):-
     getLowestSupply(L,SupplyList,LengthX,10000,Res),!,
@@ -140,7 +140,6 @@ modify([A|L],0,Data,[R1|Result]):-   % Base case : Replace when reach at the coo
 modify([A|L],Counter,Data,[A|Result]):-
     Con is Counter -1,
     modify(L,Con,Data,Result),!.
-
 
 getLowestSupply([],_,_,Dummy,Result):-
     Result is Dummy,!.
@@ -188,7 +187,7 @@ iterate([_|L],Counter,Result):-
     iterate(L,Con,Result).
 
 
-% Get list of Row
+% Get list of Row at specific coordinate
 % getListX(Xcoord,Ycoord,LengthX,List,Result)
 getListX(Xcoord,_,LengthX,_,[]):-
         Xcoord >= LengthX-1 ,!.
@@ -204,7 +203,7 @@ getListX(Xcoord,Ycoord,LengthX,List,Result):-
     getListX(NewX,Ycoord,LengthX,List,Result),!.
 
 
-% Get list of Column
+% Get list of Columnm at specific coordinate
 % getListY(Xcoord,Ycoord,LengthY,List,Result)
 getListY(_,Ycoord,LengthY,_,[]):-
     Ycoord >= LengthY-1 ,!.
@@ -231,7 +230,7 @@ findEmptyCell(['-'|L], Counter,LengthX,[(X1,Y1)|Result]):-
 findEmptyCell([_|L],Counter,LengthX,Result):- 
     Con is Counter +1 ,findEmptyCell(L,Con,LengthX,Result).
 
-% find LengthX and LengthY using Area
+% Find LengthX and LengthY using Area
 findX(['Source1'|_],0):- !.
 findX([_|L],R):-
     findX(L,R1),R is R1+1.
@@ -243,18 +242,19 @@ findY(Area,LengthX,Result):-
     Result is Area/LengthX.
 
 
+% Write the new modified list to file
+% write_list_to_file(Filename,List)
+write_list_to_file(Filename,List) :-
+    open(Filename, write, File),
+    \+ loop_through_list(File, List),
+    close(File).
+
 loop_through_list(File, List) :-
     member(Element, List),
     write(File, Element),
     write(File, ' '),
     fail.
     
-write_list_to_file(Filename,List) :-
-    open(Filename, write, File),
-    \+ loop_through_list(File, List),
-    close(File).
-
-
 % Read text file into list of strings and numbers
 readAll( InStream, [] ) :-
     at_end_of_stream(InStream), !.
