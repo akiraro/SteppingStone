@@ -1,1 +1,2 @@
-	fmt.Println(lowestValue)
+
+	fmt.Println("\n ----- Generating Solution -----")

@@ -1,74 +1,176 @@
-run:- open('3by3_initial.txt',read,F), readAll(F,L), close(F),
-    findX(L,LengthX),write("\nValue of X is "),write(LengthX),
-    findArea(L,Area),findY(Area,LengthX,LengthY),write("\nValue of Y is "),writeln(LengthY),
+
+% The main predicate to run the whole program
+% minimumTransportCost(InputFile,InitialFile,Cost)
+minimumTransportCost(A,B,Cost):- 
+    open(B,read,F), readAll(F,L), close(F),
+    open(A,read,F1), readAll(F1,C), close(F1),
+    findX(L,LengthX),
+    findArea(L,Area),findY(Area,LengthX,LengthY),
     findEmptyCell(L,0,LengthX,EmptyCells),write("List of empty cell is : "),writeln(EmptyCells),
-    %iterator(2,1,LengthX,L,Value),write("Value at (2,1) is "),writeln(Value),
-    %getListX(1,3,LengthX,L,ListX),writeln(ListX),
-    %getListY(4,1,LengthY,L,ListY),writeln(ListY),
-    writeln("\nStart finding closed loop :"),
-    addData((1,1)),stack((1,1)).
-    %findClosedLoops((1,1),LengthX,LengthY,L,ClosedLoop),write("\nThe closed loop is :"),writeln(ClosedLoop).
+    writeln("\n ----- Stepping Stone Algorithm ----- "),
+    findClosedLoops(EmptyCells,LengthX,LengthY,L,ClosedLoop),
+    findCost(ClosedLoop,C,10000,LengthX,_,RC),
+    modData(RC,L,LengthX,NewList),
+    calculateCost(NewList,C,1,LengthX,LengthY,Result),
+    writeln(""),
+    Cost is Result.
+
 
 % Stepping Stones Algorithm
-% findClosedLoops((XEmptyCell,YEmptyCell), LengthX, List, Result)
-findClosedLoops((X,Y),LengthX,LengthY,List,Result):-
-    write("Checking coordinate for empty cell ("),write(X),write(","),write(Y),writeln(")"),
-    iterateX((X,Y),(X,Y),LengthX,LengthY,List,Result),!.
+% findClosedLoops(EmptyCellList, LengthX, LengthY, List, Result)
+findClosedLoops([],_,_,_,[]):-!.
+findClosedLoops([(Ax,Ay)|L],LengthX,LengthY,List,[[(Ax,Ay)|Result]|KK]):-
+    write("\n\nChecking coordinate for empty cell ("),write(Ax),write(","),write(Ay),writeln(") .........."),
+    iterateX((Ax,Ay),(Ax,Ay),LengthX,LengthY,List,Result),
+    write("\nThe closed loop for empty cell ("),write(Ax),write(","),write(Ay),write(")"),write(" is :"),writeln(Result),
+    retractall(database((_,_))), %Clear up all the databases
+    findClosedLoops(L,LengthX,LengthY,List,KK),!.
 
-iterateX((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,Result):-
+
+iterateX((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,[(Bx,By)|Result]):-
     writeln("\nFlagX"),
     getListX(1,Ycoord,LengthX,List,[(Ax,Ay)|Lx]),
     writeln([(Ax,Ay)|Lx]),
     getNotMember((Xcoord,Ycoord),[(Ax,Ay)|Lx],(Bx,By)),
-    % getNotMember((Xcoord,Ycoord),[(Ax,Ay)|Lx],Result,(Bx,By)),
     write("("),write(Bx),write(","),write(By),writeln(")"),
-    iterateY((Xempty,Yempty),(Bx,By),LengthX,LengthY,List,[(Bx,By)|Result]),!.
+    addData((Bx,By)),
+    iterateY((Xempty,Yempty),(Bx,By),LengthX,LengthY,List,Result).
 
 
-iterateY((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,[]):-
+iterateY((Xempty,_),(Xcoord,_),_,_,_,[]):-
     Xempty = Xcoord,!.
-iterateY((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,Result):-
+iterateY((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,[(Bx,By)|Result]):-
     writeln("\nFlagY"),
     getListY(Xcoord,1,LengthY,List,[(Ax,Ay)|Ly]),
     writeln([(Ax,Ay)|Ly]),
     getNotMember((Xcoord,Ycoord),[(Ax,Ay)|Ly],(Bx,By)),
-    % getNotMember((Xcoord,Ycoord),[(Ax,Ay)|Ly],Result,(Bx,By)),
     write("("),write(Bx),write(","),write(By),writeln(")"),
-    iterateX((Xempty,Yempty),(Bx,By),LengthX,LengthY,List,[(Bx,By)|Result]),!.
-iterateY((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,Result):-
+    addData((Bx,By)),
+    iterateX((Xempty,Yempty),(Bx,By),LengthX,LengthY,List,Result),!.
+iterateY((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,[(Xcoord,Ycoord)|Result]):-
     write("("),write(Xcoord),write(","),write(Ycoord),writeln(")"),
-    iterateX((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,[(Xcoord,Ycoord)|Result]).
+    addData((Xcoord,Ycoord)),
+    iterateX((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,Result).
 
-
-getNotMember((Xcoord,Ycoord),[A|List],Result):-
+getNotMember((_,_),[A|[]],A).
+getNotMember((Xcoord,Ycoord),[A|_],Result):-
     (Xcoord,Ycoord) \= A,
+    not(database(A)),
     Result = A,
     writeln("second"),!.
 getNotMember((Xcoord,Ycoord),[A|List],Result):-
     (Xcoord,Ycoord) == A,
-    getNotMember((Xcoord,Ycoord),List,Result),
-    writeln("third").
-
-
-% getNotMember((Xcoord,Ycoord),[A|List],Stack,Result):-
-%     write("trace: "),writeln(A),
-%     write("stack: "),writeln(Stack),
-%     member(A,Stack),
-%     getNotMember((Xcoord,Ycoord),List,Stack,Result),
-%     writeln("first"),!.
-% getNotMember((Xcoord,Ycoord),[A|List],Stack,Result):-
-%     (Xcoord,Ycoord) \= A,
-%     Result = A,
-%     writeln("second"),!.
-% getNotMember((Xcoord,Ycoord),[A|List],Stack,Result):-
-%     (Xcoord,Ycoord) == A,
-%     getNotMember((Xcoord,Ycoord),List,Stack,Result),
-%     writeln("third").
+    writeln("third"),
+    getNotMember((Xcoord,Ycoord),List,Result),!.
+getNotMember((Xcoord,Ycoord),[_|List],Result):-
+    writeln("hess"),
+    getNotMember((Xcoord,Ycoord),List,Result),!.
+getNotMember(_,_,_):-
+    writeln("hell"),!.
 
 
 % Add New Data
 % addData
-addData((X,Y)):- asserta(stack((X,Y))).
+addData((X,Y)):- asserta(database((X,Y))).
+database((0,0)).
+
+% Find Marginal Cost
+% findCost(ListPath,ListCost,CurrentLowest,LengthX,Dummy,ResultCost)
+findCost([],_,_,_,Dummy,Dummy):-!.
+findCost([A|LP],LC,CL,LengthX,Dummy,RC):-
+    write("\nFinding Cost for :"),
+    writeln(A),
+    calculate(A,LC,LengthX,Res),
+    Res < CL,
+    CL1 = Res,
+    write("Marginal Cost is : "),
+    writeln(CL1),
+    writeln("Setting this path as new lowest"),
+    findCost(LP,LC,CL1,LengthX,A,RC),!.
+
+findCost([A|LP],LC,CL,LengthX,Dummy,RC):-
+    calculate(A,LC,LengthX,Res),
+    write("Marginal Cost is : "),
+    writeln(Res),
+    findCost(LP,LC,CL,LengthX,Dummy,RC),!.
+
+calculate([(Ax,Ay)|L],LC,LengthX,Result):-
+    iterator(Ax,Ay,LengthX,LC,Acc),
+    calculateNeg(L,LC,LengthX,Acc,Result).
+
+calculatePos([],_,_,Acc,Result):-
+    Result is Acc,!.
+calculatePos([(Ax,Ay)|L],LC,LengthX,Acc,Result):-
+    iterator(Ax,Ay,LengthX,LC,Res),
+    R1 is Acc + Res,
+    calculateNeg(L,LC,LengthX,R1,Result).
+
+calculateNeg([(Ax,Ay)|L],LC,LengthX,Acc,Result):-
+    iterator(Ax,Ay,LengthX,LC,Res),
+    R1 is Acc - Res,
+    calculatePos(L,LC,LengthX,R1,Result).
+
+% Modify Data
+% modData(List,LengthX)
+modData([(Ax,Ay)|L],SupplyList,LengthX,R):-
+    getLowestSupply(L,SupplyList,LengthX,10000,Res),!,
+    accessData([(Ax,Ay)|L],SupplyList,Res,LengthX,R).
+
+accessData([],Result,_,_,Result):-!.
+accessData([A|[B|L]],SupplyList,Data,LengthX,Res):-
+    A == B,
+    accessData(L,SupplyList,Data,LengthX,Res),!.
+accessData([(Ax,Ay)|L],SupplyList,Data,LengthX,Res):-
+    modifier(Ax,Ay,LengthX,SupplyList,Data,R1),
+    accessData(L,R1,Data,LengthX,Res),!.
+
+
+modifier(X,Y,LengthX,List,Data,Result):- 
+    Counter is ((Y*LengthX)+X),
+    modify(List,Counter,Data,R1),
+    Result = R1.
+
+modify([],_,_,[]):-!.
+modify([-|L],0,Data,[Data|Result]):-   % Base case : Replace when reach at the empty cell
+    modify(L,100000,Data,Result),!.
+modify([A|L],0,Data,[R1|Result]):-   % Base case : Replace when reach at the coordinates
+    R1 is A - Data,
+    modify(L,100000,Data,Result),!.
+modify([A|L],Counter,Data,[A|Result]):-
+    Con is Counter -1,
+    modify(L,Con,Data,Result),!.
+
+
+getLowestSupply([],_,_,Dummy,Result):-
+    Result is Dummy,!.
+getLowestSupply([(Ax,Ay)|L],SupplyList,LengthX,Dummy,Result):-
+    iterator(Ax,Ay,LengthX,SupplyList,Res),
+    Res<Dummy,
+    getLowestSupply(L,SupplyList,LengthX,Res,Result).
+getLowestSupply([(Ax,Ay)|L],SupplyList,LengthX,Dummy,Result):-
+    iterator(Ax,Ay,LengthX,SupplyList,Res),
+    getLowestSupply(L,SupplyList,LengthX,Dummy,Result).
+    
+
+% Calculate new total cost
+% calculateCost()
+calculateCost(A,B,Counter,LengthX,LengthY,Result):-
+    Counter < (LengthX-1),
+    getListX(1,Counter,LengthX,A,Res),
+    Cont is Counter +1,
+    calcAcc(Res,A,B,LengthX,Val),
+    calculateCost(A,B,Cont,LengthX,LengthY,Ree),
+    Result is  Val + Ree,!.
+calculateCost(_,_,_,_,_,0).
+
+
+calcAcc([],_,_,_,0).
+calcAcc([(Ax,Ay)|List],Sup,Cost,LengthX,Result):-
+    iterator(Ax,Ay,LengthX,Sup,Res1),
+    iterator(Ax,Ay,LengthX,Cost,Res2),
+    R3 is Res1*Res2,
+    calcAcc(List,Sup,Cost,LengthX,Ree),
+    Result = R3 + Ree.
 
 
 % Iterator to find value at current coordinates

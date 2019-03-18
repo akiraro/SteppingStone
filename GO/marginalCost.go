@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,17 +9,6 @@ import (
 	"strings"
 	"sync"
 )
-
-type Warehouse struct {
-	name   string
-	demand int
-}
-
-type Factory struct {
-	name   string
-	supply int
-	cost   []string
-}
 
 type Pair struct {
 	xCoord int
@@ -52,17 +42,17 @@ var sem = make(chan int, 1)
 //*****************************************************
 
 func main() {
-	// reader := bufio.NewReader(os.Stdin)
-	// fmt.Print("Enter the filename: ") )
-	// inputStr, _ := reader.ReadString('\n')
-	// fmt.Println(inputStr)
-	dataRaw = readFile("4by4_inputdata.txt")
-	// arrFactory := createFactories(dataRaw)
-	// fmt.Println(arrFactory)
-	// arrWarehouse := createWarehouses(dataRaw)
-	// fmt.Println(arrWarehouse)
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("\nEnter the inputdata filename: ")
+	inputStr, _ := reader.ReadString('\n')
+	fmt.Println(inputStr)
+	dataRaw = readFile(inputStr[:len(inputStr)-1])
 
-	dataInitial = readFile("4by4_initial.txt")
+	fmt.Print("\nEnter the intialdata filename: ")
+	inputStr2, _ := reader.ReadString('\n')
+	fmt.Println(inputStr2)
+
+	dataInitial = readFile(inputStr2[:len(inputStr2)-1])
 
 	path := make(chan Path, 10)
 
@@ -230,13 +220,11 @@ func findCost(path chan Path) {
 
 //*****************************************************
 // generateSolution
-//
-//
-//
+// This function will modify the initial.txt file and
+// produce a solution.txt file
 //******************************************************
 
 func generateSolution(path Path) {
-
 	fmt.Println("\n ----- Generating Solution -----")
 	fmt.Println(path)
 	lowestValue := 10000
@@ -272,6 +260,8 @@ func generateSolution(path Path) {
 	fmt.Println("Result is ....")
 	fmt.Println(dataRaw)
 
+	fmt.Println("\n\nSolution.txt file created!")
+
 	//* Writing array to file *//
 	f, err := os.Create("solution.txt")
 	if err != nil {
@@ -293,14 +283,13 @@ func generateSolution(path Path) {
 
 //*****************************************************
 // readFile
-//
-//
-//
+// This function will read file based on the argument
+// in the function
 //******************************************************
 
 func readFile(fileName string) [][]string {
 	home := os.Getenv("HOME")
-	err := os.Chdir(home + "/desktop/CSI ASSIGNMENT/GO")
+	err := os.Chdir(home + "/desktop/CSI ASSIGNMENT/GO") // TODO : CHANGE THIS TO LOCATION OF TXT FILES
 	if err != nil {
 		panic(err)
 	}
@@ -337,7 +326,7 @@ func readFile(fileName string) [][]string {
 // New() Push() Pop()
 //
 // Interfaces for stack
-//
+// Implement Pop and Push method for the stack
 //******************************************************
 
 func (s *Path) New() *Path {
