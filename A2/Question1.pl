@@ -1,3 +1,17 @@
+myAnswer:-
+    setof(N,sport(N,basketball),L1),
+    writeln(L1),
+    setof(A,K^(city(K,ontario),team(A,K)),L2),
+    writeln(L2),
+    setof(N,S^S2^(sport(N,S),sport(N,S2),S\=S2),K),
+    writeln(K),
+    findall((N,S),(sport(N,S),player(N,T),team(T,ottawa)),L3),
+    writeln(L3),
+    setof((N,S),T^(sport(N,S),player(N,T),team(T,ottawa)),L4), % Because there is duplicate player named marie in the database
+    writeln(L4).
+
+%make,myAnswer.
+
 city(ottawa,ontario).
 city(guelph,ontario).
 city(kingston,ontario).
@@ -34,3 +48,4 @@ player(suzy,torrents).
 player(paul,ggs).
 player(marie,ggs).
 player(simon,gryphons).
+

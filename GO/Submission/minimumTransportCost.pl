@@ -16,6 +16,7 @@ minimumTransportCost(A,B,Cost):-
     Cost is Result,
     write_list_to_file("solution.txt", NewList).
 
+% make,minimumTransportCost('3by3_inputdata.txt','3by3_initial.txt',Cost).
 
 % Stepping Stones Algorithm
 % findClosedLoops(EmptyCellList, LengthX, LengthY, List, Result)
@@ -42,7 +43,7 @@ iterateY((Xempty,_),(Xcoord,_),_,_,_,[]):-
     Xempty = Xcoord,!.
 iterateY((Xempty,Yempty),(Xcoord,Ycoord),LengthX,LengthY,List,[(Bx,By)|Result]):-
     writeln("\nFlagY"),
-    getListY(Xcoord,1,LengthY,List,[(Ax,Ay)|Ly]),
+    getListY(Xcoord,1,LengthX,List,[(Ax,Ay)|Ly]),
     writeln([(Ax,Ay)|Ly]),
     getNotMember((Xcoord,Ycoord),[(Ax,Ay)|Ly],(Bx,By)),
     write("("),write(Bx),write(","),write(By),writeln(")"),
@@ -71,11 +72,11 @@ getNotMember(_,_,_):-
 
 
 % Add New Data
-% addData((Xcoordinate,Ycoordinate))
+% addData
 addData((X,Y)):- asserta(database((X,Y))).
 database((0,0)).
 
-% Find Marginal Cost For Each Closed Loops Found
+% Find Marginal Cost
 % findCost(ListPath,ListCost,CurrentLowest,LengthX,Dummy,ResultCost)
 findCost([],_,_,_,Dummy,Dummy):-!.
 findCost([A|LP],LC,CL,LengthX,Dummy,RC):-
@@ -111,35 +112,38 @@ calculateNeg([(Ax,Ay)|L],LC,LengthX,Acc,Result):-
     R1 is Acc - Res,
     calculatePos(L,LC,LengthX,R1,Result).
 
-% Modify The Existing List 
+% Modify Data
 % modData(List,LengthX)
 modData([(Ax,Ay)|L],SupplyList,LengthX,R):-
     getLowestSupply(L,SupplyList,LengthX,10000,Res),!,
-    accessData([(Ax,Ay)|L],SupplyList,Res,LengthX,R).
+    write("Lowest Supply is :"),writeln(Res),
+    accessData([(Ax,Ay)|L],SupplyList,Res,LengthX,R,1).
 
-accessData([],Result,_,_,Result):-!.
-accessData([A|[B|L]],SupplyList,Data,LengthX,Res):-
+accessData([],Result,_,_,Result,_):-!.
+accessData([A|[B|L]],SupplyList,Data,LengthX,Res,LOL):-
     A == B,
-    accessData(L,SupplyList,Data,LengthX,Res),!.
-accessData([(Ax,Ay)|L],SupplyList,Data,LengthX,Res):-
-    modifier(Ax,Ay,LengthX,SupplyList,Data,R1),
-    accessData(L,R1,Data,LengthX,Res),!.
+    accessData(L,SupplyList,Data,LengthX,Res,LOL),!.
+accessData([(Ax,Ay)|L],SupplyList,Data,LengthX,Res,LOL):-
+    modifier(Ax,Ay,LengthX,SupplyList,Data,R1,LOL),
+    LOL1 is LOL * -1,
+    accessData(L,R1,Data,LengthX,Res,LOL1),!.
 
 
-modifier(X,Y,LengthX,List,Data,Result):- 
+modifier(X,Y,LengthX,List,Data,Result,LOL):- 
     Counter is ((Y*LengthX)+X),
-    modify(List,Counter,Data,R1),
+    modify(List,Counter,Data,R1,LOL),
     Result = R1.
 
-modify([],_,_,[]):-!.
-modify([-|L],0,Data,[Data|Result]):-   % Base case : Replace when reach at the empty cell
-    modify(L,100000,Data,Result),!.
-modify([A|L],0,Data,[R1|Result]):-   % Base case : Replace when reach at the coordinates
-    R1 is A - Data,
-    modify(L,100000,Data,Result),!.
-modify([A|L],Counter,Data,[A|Result]):-
+modify([],_,_,[],_):-!.
+modify([-|L],0,Data,[Data|Result],LOL):-   % Base case : Replace when reach at the empty cell
+    modify(L,100000,Data,Result,LOL),!.
+modify([A|L],0,Data,[R1|Result],LOL):-   % Base case : Replace when reach at the coordinates
+    R1 is A + (Data*LOL),
+    modify(L,100000,Data,Result,LOL),!.
+modify([A|L],Counter,Data,[A|Result],LOL):-
     Con is Counter -1,
-    modify(L,Con,Data,Result),!.
+    modify(L,Con,Data,Result,LOL),!.
+
 
 getLowestSupply([],_,_,Dummy,Result):-
     Result is Dummy,!.
@@ -155,7 +159,7 @@ getLowestSupply([(Ax,Ay)|L],SupplyList,LengthX,Dummy,Result):-
 % Calculate new total cost
 % calculateCost()
 calculateCost(A,B,Counter,LengthX,LengthY,Result):-
-    Counter < (LengthX-1),
+    Counter < (LengthY-1),
     getListX(1,Counter,LengthX,A,Res),
     Cont is Counter +1,
     calcAcc(Res,A,B,LengthX,Val),
@@ -187,7 +191,7 @@ iterate([_|L],Counter,Result):-
     iterate(L,Con,Result).
 
 
-% Get list of Row at specific coordinate
+% Get list of Row
 % getListX(Xcoord,Ycoord,LengthX,List,Result)
 getListX(Xcoord,_,LengthX,_,[]):-
         Xcoord >= LengthX-1 ,!.
@@ -203,7 +207,7 @@ getListX(Xcoord,Ycoord,LengthX,List,Result):-
     getListX(NewX,Ycoord,LengthX,List,Result),!.
 
 
-% Get list of Columnm at specific coordinate
+% Get list of Column
 % getListY(Xcoord,Ycoord,LengthY,List,Result)
 getListY(_,Ycoord,LengthY,_,[]):-
     Ycoord >= LengthY-1 ,!.
@@ -230,7 +234,7 @@ findEmptyCell(['-'|L], Counter,LengthX,[(X1,Y1)|Result]):-
 findEmptyCell([_|L],Counter,LengthX,Result):- 
     Con is Counter +1 ,findEmptyCell(L,Con,LengthX,Result).
 
-% Find LengthX and LengthY using Area
+% find LengthX and LengthY using Area
 findX(['Source1'|_],0):- !.
 findX([_|L],R):-
     findX(L,R1),R is R1+1.
@@ -242,19 +246,18 @@ findY(Area,LengthX,Result):-
     Result is Area/LengthX.
 
 
-% Write the new modified list to file
-% write_list_to_file(Filename,List)
-write_list_to_file(Filename,List) :-
-    open(Filename, write, File),
-    \+ loop_through_list(File, List),
-    close(File).
-
 loop_through_list(File, List) :-
     member(Element, List),
     write(File, Element),
     write(File, ' '),
     fail.
     
+write_list_to_file(Filename,List) :-
+    open(Filename, write, File),
+    \+ loop_through_list(File, List),
+    close(File).
+
+
 % Read text file into list of strings and numbers
 readAll( InStream, [] ) :-
     at_end_of_stream(InStream), !.
