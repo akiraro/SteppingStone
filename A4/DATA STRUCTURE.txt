@@ -1,0 +1,12 @@
+DATA STRUCTURE 
+
+; FUNCTIONS ;
+
+(getData data xCoord yCoord)
+(modifyData data xCoord yCoord value)
+(getLengthX data)
+(getLengthY data)
+
+; DATA ;
+
+costList ==> ((Cost xCoord yCoord))
